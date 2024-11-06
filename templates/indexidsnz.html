@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <title>Suara AI</title>
+    <style> 
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .chat-box {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            height: 300px;
+            overflow-y: auto;
+            text-align: left;
+            background-color: #f9f9f9;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .user-message, .ai-message, .loading-message {
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            max-width: 70%;
+        }
+        .user-message {
+            background-color: #e1ffc7;
+            align-self: flex-end;
+        }
+        .ai-message {
+            background-color: #d1e7ff;
+            align-self: flex-start;
+        }
+        .loading-message {
+            background-color: #f0e68c;
+            align-self: flex-start;
+            font-style: italic;
+        }
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+            margin-right: 5px;
+        }
+        .submit-button {
+            background-color: #25D366;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease;
+        }
+        .submit-button:hover {
+            background-color: #128C7E; 
+        }
+        .voice-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 15px;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 10px 0;
+        }
+        .voice-button:hover {
+            background-color: #218838;
+        }
+        .listening {
+            color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Suara</h1>
+        <div class="voice-button" id="startBtn">Mulai Berbicara</div>
+        <div class="spacer"></div>
+        <div class="chat-box" id="output"></div>
+        <div class="input-container">
+            <input type="text" id="textInput" placeholder="Masukkan perintah disini" />
+            <button class="submit-button" id="submitText">Kirim</button>
+        </div>
+        <audio id="responseAudio" style="display:none;"></audio>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = 'id-ID';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            const startListening = () => {
+                $('#output').append('<div class="listening">Listening...</div>');
+                $('#output .listening').remove();
+                recognition.start();
+            };
+
+            $('#startBtn').click(async function() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    stream.getTracks().forEach(track => track.stop());
+                    startListening();
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    alert('Error microphone access. Please allow to recognize voice.');
+                }
+            });
+
+            $('#submitText').click(function() {
+                const textInput = $('#textInput').val().trim();
+                if (textInput) {
+                    $('#output').append('<div class="user-message">'+ textInput + '</div>');
+                    kirimPerintah(textInput);
+                    $('#textInput').val('');
+                }
+            });
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript.trim();
+                $('#output').append('<div class="user-message"> ' + transcript + '</div>');
+                kirimPerintah(transcript);
+            };
+
+            function kirimPerintah(command) {
+                const loadingMessage = $('<div class="loading-message">Sedang memproses...</div>');
+                $('#output').append(loadingMessage);
+                loadingMessage.get(0).scrollIntoView({ behavior: "smooth" });
+            
+                $.ajax({
+                    url: '/ask',
+                    type: 'GET',
+                    data: { query: command },
+                    success: function(response) {
+                        const responseText = response.text_response;
+            
+                        showResponse(responseText);
+
+                        getAudio(responseText);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Kesalahan dalam pengambilan respons:", xhr.responseText);
+                    },
+                    complete: function() {
+                        loadingMessage.remove();
+                    }
+                });
+            }
+            
+            function showResponse(responseText) {
+                const aiMessageDiv = $('<div class="ai-message"></div>').text("AI: " + responseText);
+                $('#output').append(aiMessageDiv);
+                aiMessageDiv.get(0).scrollIntoView({ behavior: "smooth" });
+            }
+            
+            function getAudio(responseText) {
+                $.ajax({
+                    url: '/audio',
+                    type: 'GET',
+                    data: { text: responseText },
+                    xhrFields: { responseType: 'blob' },
+                    success: function(blob) {
+                        const audioURL = URL.createObjectURL(blob);
+                        const audioElement = document.getElementById("responseAudio");
+                        audioElement.src = audioURL;
+                        audioElement.style.display = "block";
+                        audioElement.play();
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Kesalahan dalam pengambilan audio:", xhr.responseText);
+                    }
+                });
+            }            
+            
+            recognition.onerror = function(event) {
+                console.error('Kesalahan pengenalan suara:', event.error);
+                alert('Kesalahan pengenalan suara. Mohon coba lagi atau izinkan akses mikrofon.');
+            };
+        });
+    </script>    
+</body>
+</html>
