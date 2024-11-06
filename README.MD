@@ -6,7 +6,7 @@ This code using flask framework that can make voice ai real-time with response a
 For this code I use Gemini ai (gemini-1.5-flash version) to serves the api key to build this apps and also using gTTS engine.
 
 ## To Run the Program ##
-1.Enter main_app(gTTS ver).py file to run the program. There are two ways to run the program, namely:
+#1.Enter main_app(gTTS ver).py file to run the program. There are two ways to run the program, namely:
 A. Manual Method
 -Open the python terminal then run the program by typing "py filename.py"
 B. Automatic Method
