@@ -13,7 +13,7 @@ Enter main_app(gTTS ver).py file to run the program. There are two ways to run t
 -Press the play or player icon in the top right corner
 
 ## Note from Developer ##
-Sadly I just only build the indonesia version of this AI projects but in the future I will make the another language version.
+Sadly I just only build the indonesia version of this AI projects but in the future I planning will make the another language version.
 
 # VOICE AI REAL-TIME DIBANGUN OLEH GEMINI AI DAN MENGGUNAKAN gTTS 
 
@@ -30,4 +30,4 @@ Masuk ke file main_app(gTTS ver).py untuk menjalankan program. ada dua cara untu
 -Tekan ikon play atau pemutar di pojok kanan atas
 
 ## Catatan dari Pengembang ##
-Dengan sedih Saya baru membuat versi Indonesia dari projek AI ini tetapi di masa depan Saya akan membuat versi bahasa lain.
+Dengan sedih Saya baru membuat versi Indonesia dari projek AI ini tetapi di masa depan Saya berencana akan membuat versi bahasa lain.
